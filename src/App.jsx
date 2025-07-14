@@ -3,7 +3,7 @@ import { evaluate } from 'mathjs';
 
 function App() {
   const [result, setResult] = useState('');
-  const [input, setInput] = useState(''); 
+  const [input, setInput] = useState('');
   const [activeKey, setActiveKey] = useState(null);
   const inputRef = useRef(null);
 
@@ -17,14 +17,23 @@ function App() {
 
   const processResult = () => {
     try {
+      // Check for division by zero
+      const hasDivideByZero =
+        /\/0+(?!\d)/.test(input) || /\/\s*\(.*?0\s*[\-\+*/)]*.*?\)/.test(input);
+
+      if (hasDivideByZero) {
+        setResult("Can't divide by zero");
+        return;
+      }
+
       const calculate = evaluate(input);
+
       if (Math.abs(calculate) > 1e10) {
         setResult('Too large!');
         return;
       }
 
       setResult(calculate);
-
     } catch (error) {
       setResult('Error!');
     }
@@ -80,20 +89,37 @@ function App() {
   return (
     <div className="grid place-items-center min-h-screen bg-gray-100 px-4">
       <div className="flex flex-col justify-center items-center bg-white rounded shadow-md p-5 w-full max-w-sm">
+        <h1 className="text-3xl p-5 font-bold text-red-400 text-shadow-lg">
+          CALCULATOR APP
+        </h1>
 
         {/* Display */}
         <div
           ref={inputRef}
-          className="bg-gray-50 w-full px-4 py-3 rounded mb-4 overflow-x-auto whitespace-nowrap scrollbar-hide touch-auto"
+          className="bg-gray-50 w-full px-4 py-3 rounded mb-4 overflow-x-auto whitespace-nowrap scrollbar-hide touch-auto text-shadow-xs"
         >
           {/* Expression */}
-          <div className="text-right text-gray-500 text-2xl font-semibold tracking-wide mb-1" title={input}>
+          <div
+            className="text-right text-gray-500 text-2xl font-semibold tracking-wide mb-1 text-shadow-xs"
+            title={input}
+          >
             {input || '0'}
           </div>
 
           {/* Result */}
-          <div className="text-right text-4xl font-bold text-black font-mono">
-            {result !== '' && result !== 'Error!' && result !== 'Too large!'
+          <div
+            className={`text-right text-4xl font-bold font-mono text-shadow-xs text-right' ${
+              result === 'Error!' ||
+              result === 'Too large!' ||
+              result === "Can't divide by zero"
+                ? 'text-red-600 text-xl'
+                : 'text-black text-xl' 
+            }`}
+          >
+            {result !== '' &&
+            result !== 'Error!' &&
+            result !== 'Too large!' &&
+            result !== "Can't divide by zero"
               ? result.toLocaleString()
               : result}
           </div>
@@ -104,24 +130,29 @@ function App() {
           {calculatorInput.map((num) => (
             <button
               key={num}
-              className={`bg-blue-200 p-4 rounded text-xl font-semibold hover:bg-blue-300 active:scale-95 transition
-                ${activeKey === num ? 'ring-2 ring-blue-500 scale-95' : ''}`}
-              onClick={() => num === '=' ? processResult() : inputProcess(num)}
+              className={`bg-blue-200 p-4 rounded text-xl font-semibold hover:bg-blue-300 active:scale-95 transition text-shadow-xs ${
+                activeKey === num ? 'ring-2 ring-blue-500 scale-95' : ''
+              }`}
+              onClick={() =>
+                num === '=' ? processResult() : inputProcess(num)
+              }
             >
               {num}
             </button>
           ))}
           <button
             onClick={clearResult}
-            className={`col-span-2 bg-yellow-200 p-4 rounded text-xl font-semibold hover:bg-yellow-300
-              ${activeKey === 'C' ? 'ring-2 ring-yellow-500 scale-95' : ''}`}
+            className={`col-span-2 bg-yellow-200 p-4 rounded text-xl font-semibold hover:bg-yellow-300 ${
+              activeKey === 'C' ? 'ring-2 ring-yellow-500 scale-95' : ''
+            }`}
           >
             C
           </button>
           <button
             onClick={deleteNumber}
-            className={`col-span-2 bg-red-200 p-4 rounded text-xl font-semibold hover:bg-red-300
-              ${activeKey === 'DEL' ? 'ring-2 ring-red-500 scale-95' : ''}`}
+            className={`col-span-2 bg-red-200 p-4 rounded text-xl font-semibold hover:bg-red-300 ${
+              activeKey === 'DEL' ? 'ring-2 ring-red-500 scale-95' : ''
+            }`}
           >
             DEL
           </button>
